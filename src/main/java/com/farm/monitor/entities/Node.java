@@ -27,7 +27,7 @@ public class Node {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, unique = true)
-    private int id;
+    private Long id;
 
     @Column(name = "dev_eui", nullable = false, unique = true, check = 
     @CheckConstraint(name = "dev_eui_check", constraint = "dev_eui ~ '^[0-9A-Fa-f]{16}$'"))
