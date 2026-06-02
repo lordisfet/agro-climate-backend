@@ -1,5 +1,9 @@
 package com.farm.monitor.entities;
 
+import java.time.Instant;
+
+import org.hibernate.annotations.UpdateTimestamp;
+
 import com.farm.monitor.enums.Location;
 import com.farm.monitor.enums.Status;
 
@@ -38,4 +42,7 @@ public class Node {
     @Column(name = "location", nullable = true)
     @Enumerated(EnumType.STRING)
     private Location location;
+
+    @Column(name = "last_update", nullable = true)
+    private Instant lastUpdate;
 }
