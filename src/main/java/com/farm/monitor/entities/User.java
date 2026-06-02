@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.farm.monitor.enums.Role;
 
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,8 +44,12 @@ public class User {
     @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    @Column(name = "phone")
+    @Column(name = "phone", nullable = false, unique = true, check = 
+    @CheckConstraint(name = "phone_check", constraint = "phone ~ '^\\+?[1-9]\\d{1,14}$'"))
     private String phone;
+
+    @Column(name = "telegram_chat_id", unique = true)
+    private String telegramChatId;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
@@ -52,7 +57,7 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
-    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private Instant createdAt;
 }
