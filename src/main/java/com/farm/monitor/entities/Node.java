@@ -2,8 +2,6 @@ package com.farm.monitor.entities;
 
 import java.time.Instant;
 
-import org.hibernate.annotations.UpdateTimestamp;
-
 import com.farm.monitor.enums.Location;
 import com.farm.monitor.enums.Status;
 
