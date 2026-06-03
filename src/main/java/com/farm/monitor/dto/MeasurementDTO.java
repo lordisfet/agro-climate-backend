@@ -4,11 +4,23 @@ import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
+@Data
 public class MeasurementDTO {
+    private static final long batteryMin = 0L;
+    private static final long batteryMax = 100L;
+    private static final long temperatureMin = -100L;
+    private static final long temperatureMax = 100L;
+    private static final long humidityMin = 0L;
+    private static final long humidityMax = 100L;
+    private static final long co2Min = 0L;
+    private static final long co2Max = 5000L;
+
     @NotBlank
     @JsonProperty("devEUI")
     private String devEUI;
@@ -18,20 +30,30 @@ public class MeasurementDTO {
     private String deviceName;
 
     @JsonProperty("battery")
-    @Min(value = 0)
-    @Max(value = 100)
+    @Min(value = batteryMin)
+    @Max(value = batteryMax)
     private Integer batteryLevel;
 
     @JsonProperty("temperature")
-    @Min(value = -100)
-    @Max(value = 100)
+    @Min(value = temperatureMin)
+    @Max(value = temperatureMax)
     private Double temperature;
 
     @JsonProperty("humidity")
-    @Min(value = 0)
-    @Max(value = 100)
+    @Min(value = humidityMin)
+    @Max(value = humidityMax)
     private Double humidity;
+
+    @JsonProperty("co2")
+    @Min(value = co2Min)
+    @Max(value = co2Max)
+    private Double co2Level;
 
     @JsonProperty("gatewayTime")
     private Instant gatewayTime;
+
+    @AssertTrue(message = "At least one of the measurement fields (battery, temperature, humidity, co2) must be provided")
+    private boolean isPayloadValid() {
+        return batteryLevel != null || temperature != null || humidity != null || co2Level != null; 
+    }    
 }
