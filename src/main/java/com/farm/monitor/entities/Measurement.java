@@ -19,9 +19,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "measurements", indexes = {
-    @Index(name = "idx_measurements_node_id", columnList = "node_id, timestamp DESC")
-})
+@Table(name = "measurements", 
+    indexes = 
+        @Index(name = "idx_measurements_node_id", columnList = "node_id, timestamp DESC"), 
+    check = @CheckConstraint(name = "valid_measurement", constraint = 
+        "battery_level IS NOT NULL OR temperature IS NOT NULL OR humidity IS NOT NULL OR co2_level IS NOT NULL"))
 @Getter
 @Setter
 @NoArgsConstructor
