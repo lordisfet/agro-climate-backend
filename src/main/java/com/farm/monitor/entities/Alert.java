@@ -30,4 +30,7 @@ public class Alert {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "control_rule_id", nullable = true, foreignKey = @ForeignKey(name = "fk_alerts_control_rule_id"))
     private ControlRule controlRule;
+
+    @Column(name = "message", nullable = false)
+    private String message;
 }
