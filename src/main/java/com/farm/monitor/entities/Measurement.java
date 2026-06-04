@@ -2,6 +2,8 @@ package com.farm.monitor.entities;
 
 import java.time.Instant;
 
+import com.farm.monitor.dto.MeasurementDTO;
+
 import jakarta.persistence.Index;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.CheckConstraint;
@@ -19,9 +21,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "measurements", indexes = {
-    @Index(name = "idx_measurements_node_id", columnList = "node_id, timestamp DESC")
-})
+@Table(name = "measurements", 
+    indexes = 
+        @Index(name = "idx_measurements_node_id", columnList = "node_id, timestamp DESC"), 
+    check = @CheckConstraint(name = "valid_measurement", constraint = 
+        "battery_level IS NOT NULL OR temperature IS NOT NULL OR humidity IS NOT NULL OR co2_level IS NOT NULL"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -53,4 +57,13 @@ public class Measurement {
 
     @Column(name = "timestamp", nullable = false)
     private Instant timestamp;
+
+    public Measurement(MeasurementDTO dto, Node node) {
+        this.node = node;
+        this.batteryLevel = dto.getBatteryLevel();
+        this.temperature = dto.getTemperature();
+        this.humidity = dto.getHumidity();
+        this.co2Level = dto.getCo2Level()  ;
+        this.timestamp = dto.getGatewayTime();
+    }
 }
