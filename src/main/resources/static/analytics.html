@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poultry farm | Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .dashboard { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 25px; }
+        .logout-btn { background: #ff4757; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .chart-container { position: relative; height: 50vh; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="header">
+        <h2>📊 Analytics</h2>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="climateChart"></canvas>
+    </div>
+</div>
+
+<script>
+    // Создаем глобальную переменную для хранения объекта графика
+    let climateChart = null; 
+
+    // Функция, которая ходит на сервер и обновляет/рисует график
+    async function loadDataAndUpdateChart() {
+        try {
+            const response = await fetch('/api/v1/measurements');
+            if (!response.ok) return; // Если ошибка (например, разлогинило), просто выходим
+
+            const rawData = await response.json();
+
+            // Умный парсер времени + английская локаль (en-GB для 24-часового формата)
+            const labels = rawData.map(item => {
+                let timeVal = item.gatewayTime || item.timestamp; 
+                let d = new Date(timeVal);
+                
+                // Исправление для массива чисел от Spring Boot
+                if (isNaN(d.getTime()) && Array.isArray(timeVal)) {
+                    d = new Date(timeVal[0], timeVal[1] - 1, timeVal[2], timeVal[3], timeVal[4], timeVal[5] || 0);
+                }
+                
+                return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            });
+
+            // Подготавливаем массивы данных
+            const temperatures = rawData.map(item => item.temperature);
+            const humidities = rawData.map(item => item.humidity);
+
+            // Если график еще не существует (первый запуск)
+            if (climateChart === null) {
+                const ctx = document.getElementById('climateChart').getContext('2d');
+                climateChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'Temperature (°C)', data: temperatures, borderColor: '#ff6384', tension: 0.3 },
+                            { label: 'Humidity (%)', data: humidities, borderColor: '#36a2eb', yAxisID: 'y1', tension: 0.3 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 800 }, // Плавная анимация появления новых точек
+                        scales: {
+                            y: { type: 'linear', position: 'left', title: { display: true, text: 'Temperature °C' } },
+                            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
+                        }
+                    }
+                });
+            } 
+            // Если график уже есть, просто подменяем ему данные
+            else {
+                climateChart.data.labels = labels;
+                climateChart.data.datasets[0].data = temperatures;
+                climateChart.data.datasets[1].data = humidities;
+                
+                // Команда Chart.js плавно перерисовать линии с новыми данными
+                climateChart.update(); 
+            }
+        } catch (error) {
+            console.error("Error loading data:", error);
+        }
+    }
+
+    // Как только загрузился HTML:
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Сразу рисуем график один раз
+        loadDataAndUpdateChart();
+
+        // 2. Включаем таймер (Polling): вызывать эту же функцию каждые 5000 миллисекунд (5 секунд)
+        setInterval(loadDataAndUpdateChart, 5000);
+    });
+</script>
+
+</body>
+</html>
