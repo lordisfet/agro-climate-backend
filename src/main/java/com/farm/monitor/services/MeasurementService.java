@@ -1,5 +1,7 @@
 package com.farm.monitor.services;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,11 @@ import lombok.RequiredArgsConstructor;
 public class MeasurementService {
     private final MeasurementRepository measurementRepository;
     private final NodeRepository nodeRepository; 
+
+    public List<MeasurementDTO> getAllMeasurements() {
+        List<Measurement> measurements = measurementRepository.findAll();
+        return measurements.stream().map(MeasurementDTO::new).toList();
+    }
 
     @Transactional
     public Measurement createMeasurement(MeasurementDTO measurementDTO) {
