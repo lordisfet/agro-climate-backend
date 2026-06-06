@@ -3,6 +3,7 @@ package com.farm.monitor.entities;
 import java.time.Instant;
 
 import com.farm.monitor.dto.MeasurementDTO;
+import com.farm.monitor.enums.Parameter;
 
 import jakarta.persistence.Index;
 import jakarta.persistence.ForeignKey;
@@ -65,5 +66,20 @@ public class Measurement {
         this.humidity = dto.getHumidity();
         this.co2Level = dto.getCo2Level()  ;
         this.timestamp = dto.getGatewayTime();
+    }
+
+    public Double getValueForParameter(Parameter parameter) {
+        switch (parameter) {
+            case BATTERY_LEVEL:
+                return batteryLevel;
+            case TEMPERATURE:
+                return temperature;
+            case HUMIDITY:
+                return humidity;
+            case CO2_LEVEL:
+                return co2Level;
+            default:
+                return null;
+        }
     }
 }

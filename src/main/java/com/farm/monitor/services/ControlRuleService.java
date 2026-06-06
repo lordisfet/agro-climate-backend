@@ -10,10 +10,12 @@ import com.farm.monitor.entities.Measurement;
 import com.farm.monitor.enums.Parameter;
 import com.farm.monitor.repositories.ControlRuleRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ControlRuleService {
     private final ControlRuleRepository controlRuleRepository;
     private final AlertService alertService;
@@ -25,6 +27,7 @@ public class ControlRuleService {
         violatedControlRules.addAll(isViolatedRule(Parameter.BATTERY_LEVEL, measurement.getBatteryLevel(), devEUI));
         violatedControlRules.addAll(isViolatedRule(Parameter.TEMPERATURE, measurement.getTemperature(), devEUI));
         violatedControlRules.addAll(isViolatedRule(Parameter.HUMIDITY, measurement.getHumidity(), devEUI));
+        violatedControlRules.addAll(isViolatedRule(Parameter.CO2_LEVEL, measurement.getCo2Level(), devEUI));
 
         alertService.createAlert(measurement, violatedControlRules);
     }

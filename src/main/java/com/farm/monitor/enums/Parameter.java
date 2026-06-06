@@ -4,5 +4,5 @@ public enum Parameter {
     BATTERY_LEVEL,
     TEMPERATURE,
     HUMIDITY,
-    // CO2_LEVEL,
+    CO2_LEVEL,
 }

@@ -1,16 +1,14 @@
 package com.farm.monitor.entities;
 
-import jakarta.persistence.ForeignKey;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.*;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+// Removed RequiredArgsConstructor to avoid generating a duplicate no-args constructor
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "alerts")
@@ -20,17 +18,28 @@ import lombok.*;
 public class Alert {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, unique = true)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "measurement_id", nullable = true, foreignKey = @ForeignKey(name = "fk_alerts_measurement_id"))
+    @JoinColumn(name = "measurement_id", nullable = false, foreignKey = @ForeignKey(name = "fk_alerts_measurement_id"))
     private Measurement measurement;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "control_rule_id", nullable = true, foreignKey = @ForeignKey(name = "fk_alerts_control_rule_id"))
-    private ControlRule controlRule;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "alert_control_rules",
+            joinColumns = @JoinColumn(name = "alert_id"),
+            inverseJoinColumns = @JoinColumn(name = "control_rule_id")
+    )
+    private List<ControlRule> violatedRules;
 
-    @Column(name = "message", nullable = false)
+    @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    // @Column(name = "is_resolved", nullable = false)
+    // private boolean isResolved = false;
 }
