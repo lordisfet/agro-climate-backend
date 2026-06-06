@@ -41,7 +41,7 @@ public class Measurement {
 
     @Column(name = "battery_level", nullable = true, check = 
     @CheckConstraint(name = "battery_level_check", constraint = "battery_level >= 0 AND battery_level <= 100"))
-    private Integer batteryLevel;
+    private Double batteryLevel;
 
     @Column(name = "temperature", nullable = true, check = 
     @CheckConstraint(name = "temperature_check", constraint = "temperature >= -273.15"))

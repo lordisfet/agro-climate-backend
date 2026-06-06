@@ -84,6 +84,10 @@
     		<artifactId>spring-integration-mqtt</artifactId>
     		<version>7.0.4</version>
 		</dependency>
+		<dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>

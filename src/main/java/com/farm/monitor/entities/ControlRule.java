@@ -53,5 +53,5 @@ public class ControlRule {
     private Double maxValue;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
+    private boolean isActive = true;
 }
