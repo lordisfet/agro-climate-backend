@@ -81,6 +81,9 @@ public class DataInitializer implements CommandLineRunner {
             humidityRule.setMinValue(50.);
             humidityRule.setMaxValue(65.);
             humidityRule.setActive(true);
+
+            controlRuleRepository.save(temperatureRule);
+            controlRuleRepository.save(humidityRule);
         }
     }
 }

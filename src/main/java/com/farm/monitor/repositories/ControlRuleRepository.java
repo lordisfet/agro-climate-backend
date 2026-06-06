@@ -10,5 +10,5 @@ import java.util.List;
 
 @Repository
 public interface ControlRuleRepository extends JpaRepository<ControlRule, Long> {
-    List<ControlRule> findByParameterAndDevEUIAndIsActive(Parameter parameter, String devEUI, boolean isActive);
+    List<ControlRule> findByParameterAndNode_DevEUIAndIsActive(Parameter parameter, String devEUI, boolean isActive);
 }

@@ -33,7 +33,7 @@ public class ControlRuleService {
     }
 
     private List<ControlRule> isViolatedRule(Parameter parameter, Double value ,String devEUI) {
-        List<ControlRule> controlRules = controlRuleRepository.findByParameterAndDevEUIAndIsActive(parameter, devEUI, true); 
+        List<ControlRule> controlRules = controlRuleRepository.findByParameterAndNode_DevEUIAndIsActive(parameter, devEUI, true); 
         List<ControlRule> violatedRules = new ArrayList<>();
 
         for (ControlRule controlRule : controlRules) {

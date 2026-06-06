@@ -34,7 +34,7 @@ public class AlertMessageGenerator {
         }
 
         Context context = new Context();
-        context.setVariable("devRUI", measurement.getNode().getDevEUI());
+        context.setVariable("devEUI", measurement.getNode().getDevEUI());
         context.setVariable("details", details);
 
         return templateEngine.process(templatePath, context);

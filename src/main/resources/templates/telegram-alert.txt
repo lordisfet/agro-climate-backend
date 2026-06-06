@@ -1,0 +1,7 @@
+🚨 ALARM! Multiple Microclimate Deviations!
+📡 Sensor: [(${devEUI})]
+[# th:each="detail : ${details}"]
+❌ Parameter: [(${detail.parameterName})]
+📉 Current: [(${detail.actualValue})]
+✅ Normal: [(${detail.minValue})] - [(${detail.maxValue})]
+[/]
