@@ -1,8 +1,15 @@
 package com.farm.monitor.config;
 
+import com.farm.monitor.entities.ControlRule;
 import com.farm.monitor.entities.User;
+import com.farm.monitor.enums.Level;
+import com.farm.monitor.enums.Parameter;
 import com.farm.monitor.enums.Role;
+import com.farm.monitor.repositories.ControlRuleRepository;
+import com.farm.monitor.repositories.NodeRepository;
 import com.farm.monitor.repositories.UserRepository;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
@@ -15,9 +22,12 @@ import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
+    private final ControlRuleRepository controlRuleRepository;
+    private final NodeRepository nodeRepository;
     private final PasswordEncoder passwordEncoder;
     private final static Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
@@ -53,6 +63,27 @@ public class DataInitializer implements CommandLineRunner {
 
             userRepository.save(analyst);
             logger.info("Analyst user created: username='analyst'");
+        }
+
+        if (controlRuleRepository.findAll().isEmpty()) {
+            ControlRule temperatureRule = new ControlRule();
+            temperatureRule.setNode(nodeRepository.findByDevEUI("24E124785F467119").orElseThrow());
+            temperatureRule.setParameter(Parameter.TEMPERATURE);
+            temperatureRule.setLevel(Level.CRITICAL);
+            temperatureRule.setMinValue(18.);
+            temperatureRule.setMaxValue(22.);
+            temperatureRule.setActive(true);
+
+            ControlRule humidityRule = new ControlRule();
+            humidityRule.setNode(nodeRepository.findByDevEUI("24E124785F467119").orElseThrow());
+            humidityRule.setParameter(Parameter.HUMIDITY);
+            humidityRule.setLevel(Level.CRITICAL);
+            humidityRule.setMinValue(50.);
+            humidityRule.setMaxValue(65.);
+            humidityRule.setActive(true);
+
+            controlRuleRepository.save(temperatureRule);
+            controlRuleRepository.save(humidityRule);
         }
     }
 }

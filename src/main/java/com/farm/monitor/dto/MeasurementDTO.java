@@ -35,7 +35,7 @@ public class MeasurementDTO {
     @JsonProperty("battery")
     @Min(value = batteryMin)
     @Max(value = batteryMax)
-    private Integer batteryLevel;
+    private Double batteryLevel;
 
     @JsonProperty("temperature")
     @Min(value = temperatureMin)

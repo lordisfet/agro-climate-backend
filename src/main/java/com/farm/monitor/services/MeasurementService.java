@@ -17,7 +17,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MeasurementService {
     private final MeasurementRepository measurementRepository;
-    private final NodeRepository nodeRepository; 
+    private final NodeRepository nodeRepository;
+    private final ControlRuleService controlRuleService;
 
     public List<MeasurementDTO> getAllMeasurements() {
         List<Measurement> measurements = measurementRepository.findAll();
@@ -31,6 +32,7 @@ public class MeasurementService {
         node.setLastUpdate(measurementDTO.getGatewayTime());
         var measurement = new Measurement(measurementDTO, node);
         measurementRepository.save(measurement);
+        controlRuleService.checkMeasurement(measurement);
 
         return measurement;
     } 
