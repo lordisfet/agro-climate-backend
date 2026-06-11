@@ -1,10 +1,13 @@
 package com.farm.monitor.config;
 
 import com.farm.monitor.entities.ControlRule;
+import com.farm.monitor.entities.Node;
 import com.farm.monitor.entities.User;
 import com.farm.monitor.enums.Level;
+import com.farm.monitor.enums.Location;
 import com.farm.monitor.enums.Parameter;
 import com.farm.monitor.enums.Role;
+import com.farm.monitor.enums.Status;
 import com.farm.monitor.repositories.ControlRuleRepository;
 import com.farm.monitor.repositories.NodeRepository;
 import com.farm.monitor.repositories.UserRepository;
@@ -63,6 +66,17 @@ public class DataInitializer implements CommandLineRunner {
 
             userRepository.save(analyst);
             logger.info("Analyst user created: username='analyst'");
+        }
+
+        if (nodeRepository.findAll().isEmpty()) {
+            String devEUI = "24E124785F467119";
+            Node node = new Node();
+            node.setDevEUI(devEUI);
+            node.setStatus(Status.TURN_ON);
+            node.setLocation(Location.FARM_1_HOUSING_9);
+            node.setLastUpdate(Instant.now());
+
+            nodeRepository.save(node);
         }
 
         if (controlRuleRepository.findAll().isEmpty()) {
