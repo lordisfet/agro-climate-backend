@@ -19,7 +19,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/measurements/**").permitAll() 
+                .requestMatchers("/api/v1/**").permitAll() 
                 .requestMatchers("/analytics.html").hasAnyRole(Role.ANALIST.toString(), Role.ADMIN.toString()) 
                 .anyRequest().authenticated() 
             )

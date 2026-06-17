@@ -6,12 +6,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.farm.monitor.dto.MeasurementDTO;
+import com.farm.monitor.dto.NodeDTO;
 import com.farm.monitor.entities.Measurement;
 import com.farm.monitor.repositories.MeasurementRepository;
 import com.farm.monitor.repositories.NodeRepository;
 
 import lombok.RequiredArgsConstructor;
-
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +22,11 @@ public class MeasurementService {
 
     public List<MeasurementDTO> getAllMeasurements() {
         List<Measurement> measurements = measurementRepository.findAll();
+        return measurements.stream().map(MeasurementDTO::new).toList();
+    }
+
+    public List<MeasurementDTO> getMeasurementsByDevEUI(String devEUI) {
+        List<Measurement> measurements = measurementRepository.findByNode_DevEUI(devEUI);
         return measurements.stream().map(MeasurementDTO::new).toList();
     }
 

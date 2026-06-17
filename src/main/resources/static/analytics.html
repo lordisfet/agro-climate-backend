@@ -10,95 +10,125 @@
         .dashboard { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 25px; }
         .logout-btn { background: #ff4757; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .chart-container { position: relative; height: 50vh; width: 100%; }
+        
+        /* CSS-Grid для адаптивного отображения графиков в 1 или 2 колонки */
+        #charts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 30px; }
+        .chart-wrapper { border: 1px solid #e1e4e8; border-radius: 8px; padding: 15px; background: #fafbfc; }
+        .chart-title { margin-top: 0; font-size: 1.1em; color: #333; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .canvas-container { position: relative; height: 350px; width: 100%; }
     </style>
 </head>
 <body>
 
 <div class="dashboard">
     <div class="header">
-        <h2>📊 Analytics</h2>
+        <h2>📊 Аналітика мікроклімату</h2>
         <a href="/logout" class="logout-btn">Logout</a>
     </div>
 
-    <div class="chart-container">
-        <canvas id="climateChart"></canvas>
-    </div>
+    <div id="charts-container"></div>
 </div>
 
 <script>
-    // Создаем глобальную переменную для хранения объекта графика
-    let climateChart = null; 
+    // Словарь (Map) для хранения состояний графиков. Ключ - devEUI, Значение - объект Chart.js
+    const chartInstances = {}; 
 
-    // Функция, которая ходит на сервер и обновляет/рисует график
-    async function loadDataAndUpdateChart() {
+    async function fetchAndRenderAll() {
         try {
-            const response = await fetch('/api/v1/measurements');
-            if (!response.ok) return; // Если ошибка (например, разлогинило), просто выходим
+            // Крок 1. Получаем реестр всех доступных датчиков
+            const nodesResponse = await fetch('/api/v1/nodes');
+            if (!nodesResponse.ok) return;
+            const nodes = await nodesResponse.json();
 
-            const rawData = await response.json();
+            const container = document.getElementById('charts-container');
 
-            // Умный парсер времени + английская локаль (en-GB для 24-часового формата)
-            const labels = rawData.map(item => {
-                let timeVal = item.gatewayTime || item.timestamp; 
-                let d = new Date(timeVal);
-                
-                // Исправление для массива чисел от Spring Boot
-                if (isNaN(d.getTime()) && Array.isArray(timeVal)) {
-                    d = new Date(timeVal[0], timeVal[1] - 1, timeVal[2], timeVal[3], timeVal[4], timeVal[5] || 0);
+            // Если база пустая
+            if (nodes.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#666;">Активні датчики не знайдено.</p>';
+                return;
+            }
+
+            // Крок 2. Итерируемся по массиву датчиков
+            for (const node of nodes) {
+                const devEUI = node.devEUI;
+                // Защита: если локация null, выводим заглушку
+                const location = node.location || 'Невідома локація'; 
+
+                // Крок 3. Генерация DOM-элементов (если графика для этого узла еще нет)
+                if (!document.getElementById(`wrapper-${devEUI}`)) {
+                    const wrapper = document.createElement('div');
+                    wrapper.id = `wrapper-${devEUI}`;
+                    wrapper.className = 'chart-wrapper';
+                    
+                    wrapper.innerHTML = `
+                        <h3 class="chart-title">Локація: ${location} <br><small style="color:gray; font-size: 0.8em;">ID: ${devEUI}</small></h3>
+                        <div class="canvas-container">
+                            <canvas id="chart-${devEUI}"></canvas>
+                        </div>
+                    `;
+                    container.appendChild(wrapper);
                 }
-                
-                return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            });
 
-            // Подготавливаем массивы данных
-            const temperatures = rawData.map(item => item.temperature);
-            const humidities = rawData.map(item => item.humidity);
+                // Крок 4. Запрашиваем телеметрию ТОЛЬКО для текущего узла
+                const measurementsResponse = await fetch(`/api/v1/measurements/node/${devEUI}`);
+                if (!measurementsResponse.ok) continue; // Пропускаем итерацию, если для датчика нет данных
+                const rawData = await measurementsResponse.json();
 
-            // Если график еще не существует (первый запуск)
-            if (climateChart === null) {
-                const ctx = document.getElementById('climateChart').getContext('2d');
-                climateChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            { label: 'Temperature (°C)', data: temperatures, borderColor: '#ff6384', tension: 0.3 },
-                            { label: 'Humidity (%)', data: humidities, borderColor: '#36a2eb', yAxisID: 'y1', tension: 0.3 }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: { duration: 800 }, // Плавная анимация появления новых точек
-                        scales: {
-                            y: { type: 'linear', position: 'left', title: { display: true, text: 'Temperature °C' } },
-                            y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false } }
-                        }
+                // Умный парсер времени
+                const labels = rawData.map(item => {
+                    let timeVal = item.gatewayTime || item.timestamp; 
+                    let d = new Date(timeVal);
+                    
+                    if (isNaN(d.getTime()) && Array.isArray(timeVal)) {
+                        d = new Date(timeVal[0], timeVal[1] - 1, timeVal[2], timeVal[3], timeVal[4], timeVal[5] || 0);
                     }
+                    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 });
-            } 
-            // Если график уже есть, просто подменяем ему данные
-            else {
-                climateChart.data.labels = labels;
-                climateChart.data.datasets[0].data = temperatures;
-                climateChart.data.datasets[1].data = humidities;
-                
-                // Команда Chart.js плавно перерисовать линии с новыми данными
-                climateChart.update(); 
+
+                const temperatures = rawData.map(item => item.temperature);
+                const humidities = rawData.map(item => item.humidity);
+
+                // Крок 5. Обновление состояния (State Update)
+                if (chartInstances[devEUI]) {
+                    // Мутируем данные существующего графика для плавной анимации
+                    chartInstances[devEUI].data.labels = labels;
+                    chartInstances[devEUI].data.datasets[0].data = temperatures;
+                    chartInstances[devEUI].data.datasets[1].data = humidities;
+                    chartInstances[devEUI].update();
+                } else {
+                    // Инициализация нового графика
+                    const ctx = document.getElementById(`chart-${devEUI}`).getContext('2d');
+                    chartInstances[devEUI] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                { label: 'Температура (°C)', data: temperatures, borderColor: '#ff6384', backgroundColor: 'rgba(255, 99, 132, 0.1)', fill: true, tension: 0.3 },
+                                { label: 'Вологість (%)', data: humidities, borderColor: '#36a2eb', backgroundColor: 'rgba(54, 162, 235, 0.1)', fill: true, yAxisID: 'y1', tension: 0.3 }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: { duration: 800 },
+                            interaction: { mode: 'index', intersect: false }, // Улучшенный тултип при наведении
+                            scales: {
+                                y: { type: 'linear', position: 'left', title: { display: true, text: 'Температура °C' } },
+                                y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Вологість %' } }
+                            }
+                        }
+                    });
+                }
             }
         } catch (error) {
-            console.error("Error loading data:", error);
+            console.error("Помилка синхронізації телеметрії:", error);
         }
     }
 
-    // Как только загрузился HTML:
+    // Точка входа
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. Сразу рисуем график один раз
-        loadDataAndUpdateChart();
-
-        // 2. Включаем таймер (Polling): вызывать эту же функцию каждые 5000 миллисекунд (5 секунд)
-        setInterval(loadDataAndUpdateChart, 5000);
+        fetchAndRenderAll();
+        setInterval(fetchAndRenderAll, 5000); // Polling каждые 5 секунд
     });
 </script>
 

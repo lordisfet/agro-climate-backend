@@ -1,6 +1,7 @@
 package com.farm.monitor.config;
 
 import com.farm.monitor.entities.ControlRule;
+import com.farm.monitor.entities.Measurement;
 import com.farm.monitor.entities.Node;
 import com.farm.monitor.entities.User;
 import com.farm.monitor.enums.Level;
@@ -9,6 +10,7 @@ import com.farm.monitor.enums.Parameter;
 import com.farm.monitor.enums.Role;
 import com.farm.monitor.enums.Status;
 import com.farm.monitor.repositories.ControlRuleRepository;
+import com.farm.monitor.repositories.MeasurementRepository;
 import com.farm.monitor.repositories.NodeRepository;
 import com.farm.monitor.repositories.UserRepository;
 
@@ -22,6 +24,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +36,7 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final ControlRuleRepository controlRuleRepository;
     private final NodeRepository nodeRepository;
+    private final MeasurementRepository measurementRepository;
     private final PasswordEncoder passwordEncoder;
     private final static Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
@@ -68,15 +74,32 @@ public class DataInitializer implements CommandLineRunner {
             logger.info("Analyst user created: username='analyst'");
         }
 
-        if (nodeRepository.findAll().isEmpty()) {
-            String devEUI = "24E124785F467119";
-            Node node = new Node();
-            node.setDevEUI(devEUI);
-            node.setStatus(Status.TURN_ON);
-            node.setLocation(Location.FARM_1_HOUSING_9);
-            node.setLastUpdate(Instant.now());
+        if (nodeRepository.count() < 3) {
+            Random rand = new Random();
+            String defaultDevEUI = "24E124785F467119";
+            List<Measurement> measurements = measurementRepository.findByNode_DevEUI(defaultDevEUI);
+            List<String> devEUIs = List.of("24E124785F467119", "24E124785F463307", "24E124785F463269");
+            for(String devEUI : devEUIs) {
+                if (nodeRepository.findByDevEUI(devEUI).isEmpty()) {
+                    logger.info("Creating measurements for node: " + defaultDevEUI);
+                    Node node = new Node();
+                    node.setDevEUI(devEUI);
+                    node.setStatus(Status.TURN_ON);
+                    node.setLocation(Location.FARM_1_HOUSING_9);
+                    node.setLastUpdate(Instant.now());
+                    nodeRepository.save(node);
 
-            nodeRepository.save(node);
+                    List<Measurement> newMeasurements = new ArrayList<>();
+                    for(Measurement measurement : measurements) {
+                        Measurement newMeasurement = new Measurement(measurement);
+                        newMeasurement.setNode(node);
+                        newMeasurement.setTemperature(measurement.getTemperature() * (1 - (rand.nextDouble() / 4)));
+                        newMeasurement.setHumidity(measurement.getHumidity() * (1 - (rand.nextDouble() / 4)));
+                        newMeasurements.add(newMeasurement);
+                    }
+                    measurementRepository.saveAll(newMeasurements);
+                }
+            }
         }
 
         if (controlRuleRepository.findAll().isEmpty()) {
