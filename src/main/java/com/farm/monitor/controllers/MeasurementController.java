@@ -33,7 +33,6 @@ import tools.jackson.databind.cfg.DateTimeFeature;
 @RequestMapping("/api/v1/measurements")
 @RequiredArgsConstructor
 public class MeasurementController {
-    private final NodeRepository nodeRepository;
     private final MeasurementService measurementService;
     private final NodeService nodeService;
     private static final Logger logger = LoggerFactory.getLogger(MeasurementController.class);
@@ -63,13 +62,14 @@ public class MeasurementController {
 
         List<MeasurementDTO> measurements;
         if (startDate != null || endDate != null) {
-            if (startDate == null) {
-                startDate = Instant.now();
+            Instant actualStart = (startDate != null) ? startDate : Instant.EPOCH;
+            Instant actualEnd = (endDate != null) ? endDate : Instant.now();
+
+            if (actualStart.isAfter(actualEnd)) {
+                return ResponseEntity.badRequest().build();
             }
-            if (endDate == null) {
-                endDate = Instant.EPOCH;
-            }
-            measurements = measurementService.getMeasurementsByDevEUIAndDateRange(devEUI, startDate, endDate);
+
+            measurements = measurementService.getMeasurementsByDevEUIAndDateRange(devEUI, actualStart, actualEnd);
         }
         else {
             measurements = measurementService.getMeasurementsByDevEUI(devEUI);

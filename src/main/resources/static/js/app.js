@@ -1,8 +1,51 @@
 const AppController = {
-    // Ссылка на главный контейнер в HTML
     container: document.getElementById('charts-container'),
+    
+    // НОВОЕ СОСТОЯНИЕ: Храним текущий выбранный интервал
+    currentRange: '1D', 
 
-    // Создает HTML-карточку для нового датчика, если её еще нет
+    // Метод: Математика вычисления стартовой даты
+    calculateStartDate(range) {
+        if (range === 'MAX') return null; // Для MAX возвращаем null (сервер отдаст всё)
+
+        const now = new Date(); // Берем текущее время браузера
+        
+        // Отнимаем нужное количество времени
+        switch (range) {
+            case '8H': now.setHours(now.getHours() - 8); break;
+            case '1D': now.setDate(now.getDate() - 1); break;
+            case '7D': now.setDate(now.getDate() - 7); break;
+            case '1M': now.setMonth(now.getMonth() - 1); break;
+            case '6M': now.setMonth(now.getMonth() - 6); break;
+            case '1Y': now.setFullYear(now.getFullYear() - 1); break;
+        }
+        
+        // Магия: toISOString() автоматически переводит время в UTC
+        // и выдает строку формата "2026-06-17T08:00:00.000Z", 
+        // которую идеально понимает твой Spring Boot бэкенд!
+        return now.toISOString(); 
+    },
+
+    // Метод: Привязка событий к кнопкам
+    setupEventListeners() {
+        const buttons = document.querySelectorAll('.time-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Убираем класс active у всех кнопок
+                buttons.forEach(b => b.classList.remove('active'));
+                
+                // Добавляем класс active нажатой кнопке
+                e.target.classList.add('active');
+                
+                // Обновляем состояние
+                this.currentRange = e.target.dataset.range;
+                
+                // МГНОВЕННО запрашиваем новые данные и перерисовываем графики!
+                this.syncData(); 
+            });
+        });
+    },
+
     createDomWrapperIfNeeded(devEUI, location) {
         if (!document.getElementById(`wrapper-${devEUI}`)) {
             const wrapper = document.createElement('div');
@@ -18,10 +61,8 @@ const AppController = {
         }
     },
 
-    // Главная функция синхронизации
     async syncData() {
         try {
-            // 1. Идем на бэкенд за списком датчиков
             const nodes = await ApiClient.getNodes();
             
             if (nodes.length === 0) {
@@ -29,29 +70,30 @@ const AppController = {
                 return;
             }
 
-            // 2. Для каждого датчика...
+            // Вычисляем startDate ОДИН РАЗ для всех датчиков
+            const startDateISO = this.calculateStartDate(this.currentRange);
+
             for (const node of nodes) {
                 const devEUI = node.devEUI;
                 const location = node.location || 'Невідома локація';
 
-                // Создаем для него блок на странице
                 this.createDomWrapperIfNeeded(devEUI, location);
 
-                // Загружаем его измерения
                 try {
-                    const rawData = await ApiClient.getMeasurements(devEUI);
+                    // Передаем дату в API!
+                    const rawData = await ApiClient.getMeasurements(devEUI, startDateISO);
                     
-                    // Парсим время ISO 8601 (Instant из бэкенда) в локальное время браузера
                     const labels = rawData.map(item => {
                         const d = new Date(item.gatewayTime);
+                        
+                        // Нюанс UX: если смотрим за год, показывать секунды глупо.
+                        // Пока оставляем полный формат, но в будущем можно форматировать в зависимости от this.currentRange
                         return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                     });
 
-                    // Собираем данные в массивы
                     const temperatures = rawData.map(item => item.temperature);
                     const humidities = rawData.map(item => item.humidity);
 
-                    // Отдаем команду нарисовать/обновить график
                     ChartService.render(devEUI, labels, temperatures, humidities);
 
                 } catch (e) {
@@ -63,14 +105,13 @@ const AppController = {
         }
     },
 
-    // Запуск приложения
     init() {
-        this.syncData(); // Первый запуск сразу
-        setInterval(() => this.syncData(), 5000); // Повторять каждые 5 секунд
+        this.setupEventListeners(); // Включаем слушатели кнопок
+        this.syncData(); 
+        setInterval(() => this.syncData(), 5000); 
     }
 };
 
-// Ждем, пока загрузится HTML, и запускаем "мозг"
 document.addEventListener("DOMContentLoaded", () => {
     AppController.init();
 });
