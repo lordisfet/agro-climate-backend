@@ -1,6 +1,9 @@
+server.address=0.0.0.0
+# 8443 for https and 8080 for http
 server.port=8080
+server.forward-headers-strategy=framework
 
-// choose dev or prod
+# "dev" for development "prod" for production
 spring.profiles.active=dev
 spring.application.name=monitor
 
