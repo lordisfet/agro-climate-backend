@@ -68,6 +68,16 @@ public class Measurement {
         this.timestamp = dto.getGatewayTime();
     }
 
+    public Measurement(Measurement other) {
+        this.id = null;
+        this.node = other.node;
+        this.batteryLevel = other.batteryLevel;
+        this.temperature = other.temperature;
+        this.humidity = other.humidity;
+        this.co2Level = other.co2Level;
+        this.timestamp = other.timestamp;
+    }
+
     public Double getValueForParameter(Parameter parameter) {
         switch (parameter) {
             case BATTERY_LEVEL:
