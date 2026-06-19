@@ -9,12 +9,12 @@ import com.farm.monitor.enums.Status;
 public record NodeDTO(
     String devEUI,
     Status status,
-    Location location,
+    String locationName,
     Instant lastUpdate
 ) 
 {
     public NodeDTO(Node node) {
-        this(node.getDevEUI(), node.getStatus(), node.getLocation(), node.getLastUpdate());
+        this(node.getDevEUI(), node.getStatus(), node.getLocation().getName(), node.getLastUpdate());
     }
 }
  

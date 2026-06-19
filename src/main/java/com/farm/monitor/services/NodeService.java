@@ -1,5 +1,6 @@
 package com.farm.monitor.services;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +19,8 @@ public class NodeService {
 
     public List<NodeDTO> getAllNodes() {
         List<Node> nodes = nodeRepository.findAll();
-        return nodes.stream().map(NodeDTO::new).toList();
+        return nodes.stream()
+        .sorted(Comparator.comparingInt(node -> node.getLocation().getOrderId())).map(NodeDTO::new).toList();
     }
 
     public Optional<NodeDTO> getNodeByDevEUI(String devEUI) {

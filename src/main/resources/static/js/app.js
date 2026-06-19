@@ -52,7 +52,7 @@ const AppController = {
             wrapper.id = `wrapper-${devEUI}`;
             wrapper.className = 'chart-wrapper';
             wrapper.innerHTML = `
-                <h3 class="chart-title">Локація: ${location} <br><small style="color:gray; font-size: 0.8em;">ID: ${devEUI}</small></h3>
+                <h3 class="chart-title">Location: ${location} <br><small style="color:gray; font-size: 0.8em;">ID: ${devEUI}</small></h3>
                 <div class="canvas-container">
                     <canvas id="chart-${devEUI}"></canvas>
                 </div>
@@ -75,9 +75,9 @@ const AppController = {
 
             for (const node of nodes) {
                 const devEUI = node.devEUI;
-                const location = node.location || 'Невідома локація';
+                const locationName = node.locationName || 'Невідома локація';
 
-                this.createDomWrapperIfNeeded(devEUI, location);
+                this.createDomWrapperIfNeeded(devEUI, locationName);
 
                 try {
                     // Передаем дату в API!

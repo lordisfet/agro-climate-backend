@@ -17,8 +17,8 @@ const ChartService = {
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Температура (°C)', data: temperatures, borderColor: '#ff6384', backgroundColor: 'rgba(255, 99, 132, 0.1)', fill: true, tension: 0.3 },
-                        { label: 'Вологість (%)', data: humidities, borderColor: '#36a2eb', backgroundColor: 'rgba(54, 162, 235, 0.1)', fill: true, yAxisID: 'y1', tension: 0.3 }
+                        { label: 'Temperature (°C)', data: temperatures, borderColor: '#ff6384', backgroundColor: 'rgba(255, 99, 132, 0.1)', fill: true, tension: 0.3 },
+                        { label: 'Humidity (%)', data: humidities, borderColor: '#36a2eb', backgroundColor: 'rgba(54, 162, 235, 0.1)', fill: true, yAxisID: 'y1', tension: 0.3 }
                     ]
                 },
                 options: {
@@ -27,8 +27,8 @@ const ChartService = {
                     animation: { duration: 800 },
                     interaction: { mode: 'index', intersect: false },
                     scales: {
-                        y: { type: 'linear', position: 'left', title: { display: true, text: 'Температура °C' } },
-                        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Вологість %' } }
+                        y: { type: 'linear', position: 'left', title: { display: true, text: 'Temperature °C' } },
+                        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Humidity %' } }
                     }
                 }
             });
