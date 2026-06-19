@@ -13,5 +13,5 @@ import java.time.Instant;
 @Repository
 public interface MeasurementRepository extends JpaRepository<Measurement, Long> {
     List<Measurement> findByNode_DevEUI(String devEUI);
-    List<Measurement> findByNode_DevEUIAndTimestampBetween(String devEUI, Instant startDate, Instant endDate);
+    List<Measurement> findByNode_DevEUIAndTimestampBetweenOrderByTimestampAsc(String devEUI, Instant startDate, Instant endDate);
 }

@@ -20,10 +20,12 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -31,6 +33,7 @@ import java.util.Random;
 @Component
 @RequiredArgsConstructor
 @Transactional
+@Profile("dev")
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -74,32 +77,69 @@ public class DataInitializer implements CommandLineRunner {
             logger.info("Analyst user created: username='analyst'");
         }
 
-        if (nodeRepository.count() < 3) {
-            Random rand = new Random();
-            String defaultDevEUI = "24E124785F467119";
-            List<Measurement> measurements = measurementRepository.findByNode_DevEUI(defaultDevEUI);
-            List<String> devEUIs = List.of("24E124785F467119", "24E124785F463307", "24E124785F463269");
-            for(String devEUI : devEUIs) {
-                if (nodeRepository.findByDevEUI(devEUI).isEmpty()) {
-                    logger.info("Creating measurements for node: " + defaultDevEUI);
-                    Node node = new Node();
-                    node.setDevEUI(devEUI);
-                    node.setStatus(Status.TURN_ON);
-                    node.setLocation(Location.FARM_1_HOUSING_9);
-                    node.setLastUpdate(Instant.now());
-                    nodeRepository.save(node);
+        List<Node> nodes = nodeRepository.findAll();
 
-                    List<Measurement> newMeasurements = new ArrayList<>();
-                    for(Measurement measurement : measurements) {
-                        Measurement newMeasurement = new Measurement(measurement);
-                        newMeasurement.setNode(node);
-                        newMeasurement.setTemperature(measurement.getTemperature() * (1 - (rand.nextDouble() / 4)));
-                        newMeasurement.setHumidity(measurement.getHumidity() * (1 - (rand.nextDouble() / 4)));
-                        newMeasurements.add(newMeasurement);
-                    }
-                    measurementRepository.saveAll(newMeasurements);
+        if (nodes.isEmpty()) {
+            logger.warn("В базі даних немає датчиків! Спочатку створіть їх, генерацію пропущено.");
+            return;
+        }
+
+        Instant now = Instant.now();
+        // 1.5 года = примерно 547 дней
+        Instant startTime = now.minus(547, ChronoUnit.DAYS);
+        Random rand = new Random();
+
+        for (Node node : nodes) {
+            // Проверка: чтобы при каждом перезапуске не дублировать по 78к записей,
+            // генерируем только если для датчика еще нет измерений.
+            // (Если у тебя нет метода findFirstByNode_DevEUI, используй count или просто очисти БД перед запуском)
+            List<Measurement> existing = measurementRepository.findByNode_DevEUI(node.getDevEUI());
+            if (!existing.isEmpty()) {
+                logger.info("Датчик {} вже має дані. Пропускаємо генерацію.", node.getDevEUI());
+                continue;
+            }
+
+            logger.info("Починаємо генерацію 1.5 року даних (крок 10 хв) для датчика: {}", node.getDevEUI());
+
+            List<Measurement> batch = new ArrayList<>();
+            int batchSize = 5000; // Оптимальный размер пачки для базы данных
+
+            for (Instant time = startTime; time.isBefore(now); time = time.plus(10, ChronoUnit.MINUTES)) {
+                Measurement m = new Measurement();
+                m.setNode(node);
+                m.setTimestamp(time);
+
+                // --- МАТЕМАТИЧЕСКАЯ ИМИТАЦИЯ ---
+                long millis = time.toEpochMilli();
+
+                // 1. Сезонная волна (Год). Амплитуда 15°C (Зима холоднее, лето жарче)
+                double seasonalOffset = Math.sin(millis / 31536000000.0 * 2 * Math.PI) * 15;
+                
+                // 2. Суточная волна (День/Ночь). Амплитуда 4°C
+                double dailyOffset = Math.sin(millis / 86400000.0 * 2 * Math.PI) * 4;
+
+                // Базовая температура 12°C + сезон + день/ночь + белый шум (0.5°C)
+                m.setTemperature(12.0 + seasonalOffset + dailyOffset + (rand.nextDouble() - 0.5));
+                
+                // Влажность: 60% база +/- 10%
+                m.setHumidity(60.0 + (rand.nextDouble() * 20 - 10));
+
+                batch.add(m);
+
+                // Сохраняем пачками по 5000, чтобы не убить оперативную память
+                if (batch.size() >= batchSize) {
+                    measurementRepository.saveAll(batch);
+                    batch.clear(); // Очищаем список после сохранения
                 }
             }
+
+            // Сохраняем остатки (последнюю пачку, которая меньше 5000)
+            if (!batch.isEmpty()) {
+                measurementRepository.saveAll(batch);
+                batch.clear();
+            }
+
+            logger.info("Успішно згенеровано дані для датчика: {}", node.getDevEUI());
         }
 
         if (controlRuleRepository.findAll().isEmpty()) {

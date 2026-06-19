@@ -2,7 +2,7 @@ const AppController = {
     container: document.getElementById('charts-container'),
     
     // НОВОЕ СОСТОЯНИЕ: Храним текущий выбранный интервал
-    currentRange: '1D', 
+    currentRange: '8H', 
 
     // Метод: Математика вычисления стартовой даты
     calculateStartDate(range) {

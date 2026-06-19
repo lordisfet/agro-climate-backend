@@ -33,7 +33,7 @@ public class MeasurementService {
     }
 
     public List<MeasurementDTO> getMeasurementsByDevEUIAndDateRange(String devEUI, Instant startDate, Instant endDate) {
-        List<Measurement> measurements = measurementRepository.findByNode_DevEUIAndTimestampBetween(devEUI, startDate, endDate);
+        List<Measurement> measurements = measurementRepository.findByNode_DevEUIAndTimestampBetweenOrderByTimestampAsc(devEUI, startDate, endDate);
         return measurements.stream().map(MeasurementDTO::new).toList();
     }
 
