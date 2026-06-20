@@ -2,6 +2,7 @@ package com.farm.monitor.dto;
 
 import java.time.Instant;
 
+import com.farm.monitor.dto.projections.MeasurementAggregation;
 import com.farm.monitor.entities.Measurement;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -67,5 +68,13 @@ public class MeasurementDTO {
         this.humidity = measurement.getHumidity();
         this.co2Level = measurement.getCo2Level();
         this.gatewayTime = measurement.getTimestamp();
+    }
+
+    public MeasurementDTO(String devEUI, MeasurementAggregation agg) {
+        this.devEUI = devEUI;
+        this.gatewayTime = agg.getTimestamp();
+        
+        this.temperature = agg.getTemperature() != null ? Math.round(agg.getTemperature() * 100.0) / 100.0 : null;
+        this.humidity = agg.getHumidity() != null ? Math.round(agg.getHumidity() * 100.0) / 100.0 : null;
     }
 }
