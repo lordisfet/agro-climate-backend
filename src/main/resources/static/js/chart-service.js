@@ -1,16 +1,13 @@
 const ChartService = {
-    instances: {}, // Словарь для хранения графиков: { "devEUI": объектГрафика }
+    instances: {},
 
-    // Метод отрисовки или обновления графика
     render(devEUI, labels, temperatures, humidities) {
         if (this.instances[devEUI]) {
-            // Если график уже существует, просто подменяем массивы данных и обновляем
             this.instances[devEUI].data.labels = labels;
             this.instances[devEUI].data.datasets[0].data = temperatures;
             this.instances[devEUI].data.datasets[1].data = humidities;
             this.instances[devEUI].update();
         } else {
-            // Если графика еще нет, создаем новый с нуля
             const ctx = document.getElementById(`chart-${devEUI}`).getContext('2d');
             this.instances[devEUI] = new Chart(ctx, {
                 type: 'line',

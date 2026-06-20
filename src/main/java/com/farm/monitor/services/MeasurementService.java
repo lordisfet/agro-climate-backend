@@ -1,6 +1,8 @@
 package com.farm.monitor.services;
 
 import com.farm.monitor.controllers.MeasurementController;
+
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -9,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.farm.monitor.dto.MeasurementDTO;
 import com.farm.monitor.dto.NodeDTO;
+import com.farm.monitor.dto.projections.MeasurementAggregation;
 import com.farm.monitor.entities.Measurement;
 import com.farm.monitor.repositories.MeasurementRepository;
 import com.farm.monitor.repositories.NodeRepository;
@@ -33,8 +36,28 @@ public class MeasurementService {
     }
 
     public List<MeasurementDTO> getMeasurementsByDevEUIAndDateRange(String devEUI, Instant startDate, Instant endDate) {
-        List<Measurement> measurements = measurementRepository.findByNode_DevEUIAndTimestampBetweenOrderByTimestampAsc(devEUI, startDate, endDate);
-        return measurements.stream().map(MeasurementDTO::new).toList();
+        List<MeasurementAggregation> aggData;
+        
+        long daysBetween = Duration.between(startDate, endDate).toDays();
+
+        if (daysBetween > 32) {
+            aggData = measurementRepository.findAggregatedByDay(devEUI, startDate, endDate);
+            return aggData.stream()
+                    .map(agg -> new MeasurementDTO(devEUI, agg))
+                    .toList();
+
+        } else if (daysBetween > 2) {
+            aggData = measurementRepository.findAggregatedByHour(devEUI, startDate, endDate);
+            return aggData.stream()
+                    .map(agg -> new MeasurementDTO(devEUI, agg))
+                    .toList();
+
+        } else {
+            List<Measurement> rawData = measurementRepository.findByNode_DevEUIAndTimestampBetweenOrderByTimestampAsc(devEUI, startDate, endDate);
+            return rawData.stream()
+                    .map(MeasurementDTO::new)
+                    .toList();
+        }
     }
 
     @Transactional

@@ -1,16 +1,12 @@
 const AppController = {
     container: document.getElementById('charts-container'),
     
-    // НОВОЕ СОСТОЯНИЕ: Храним текущий выбранный интервал
     currentRange: '8H', 
 
-    // Метод: Математика вычисления стартовой даты
     calculateStartDate(range) {
-        if (range === 'MAX') return null; // Для MAX возвращаем null (сервер отдаст всё)
+        if (range === 'MAX') return null;
 
-        const now = new Date(); // Берем текущее время браузера
-        
-        // Отнимаем нужное количество времени
+        const now = new Date(); 
         switch (range) {
             case '8H': now.setHours(now.getHours() - 8); break;
             case '1D': now.setDate(now.getDate() - 1); break;
@@ -20,27 +16,19 @@ const AppController = {
             case '1Y': now.setFullYear(now.getFullYear() - 1); break;
         }
         
-        // Магия: toISOString() автоматически переводит время в UTC
-        // и выдает строку формата "2026-06-17T08:00:00.000Z", 
-        // которую идеально понимает твой Spring Boot бэкенд!
         return now.toISOString(); 
     },
 
-    // Метод: Привязка событий к кнопкам
     setupEventListeners() {
         const buttons = document.querySelectorAll('.time-btn');
         buttons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                // Убираем класс active у всех кнопок
                 buttons.forEach(b => b.classList.remove('active'));
-                
-                // Добавляем класс active нажатой кнопке
+
                 e.target.classList.add('active');
-                
-                // Обновляем состояние
+
                 this.currentRange = e.target.dataset.range;
-                
-                // МГНОВЕННО запрашиваем новые данные и перерисовываем графики!
+
                 this.syncData(); 
             });
         });
@@ -70,7 +58,6 @@ const AppController = {
                 return;
             }
 
-            // Вычисляем startDate ОДИН РАЗ для всех датчиков
             const startDateISO = this.calculateStartDate(this.currentRange);
 
             for (const node of nodes) {
@@ -80,7 +67,6 @@ const AppController = {
                 this.createDomWrapperIfNeeded(devEUI, locationName);
 
                 try {
-                    // Передаем дату в API!
                     const rawData = await ApiClient.getMeasurements(devEUI, startDateISO);
                     
                     const labels = rawData.map(item => {
@@ -106,7 +92,7 @@ const AppController = {
     },
 
     init() {
-        this.setupEventListeners(); // Включаем слушатели кнопок
+        this.setupEventListeners();
         this.syncData(); 
         setInterval(() => this.syncData(), 5000); 
     }

@@ -1,4 +1,3 @@
-/* Магическое правило: теперь padding не будет увеличивать ширину блоков! */
 * {
     box-sizing: border-box;
 }
@@ -6,14 +5,14 @@
 body {
     margin: 0;
     padding: 0;
-    overflow-x: hidden; /* Жестко запрещаем горизонтальный скролл для всей страницы */
-    background-color: #f4f7f6; /* Легкий серый фон страницы, чтобы белые карточки выделялись */
+    overflow-x: hidden;
+    background-color: #f4f7f6;
 }
 .dashboard {
     width: 100%;
-    max-width: 1200px; /* На больших мониторах сайт не будет растягиваться в бесконечность */
-    margin: 0 auto;    /* Центрируем на больших экранах */
-    padding: 10px;     /* Маленький отступ от краев экрана на мобилках */
+    max-width: 1200px;
+    margin: 0 auto;    
+    padding: 10px;    
 }
 .header { 
     display: flex; 
@@ -33,12 +32,11 @@ body {
 }
 #charts-container {
     display: flex;
-    flex-direction: column; /* На телефонах графики идут строго друг под другом */
-    gap: 20px;              /* Пространство между карточками */
+    flex-direction: column;
+    gap: 20px;              
     width: 100%;
 }
 
-/* Если экран шире 768px (Планшеты и ПК) - делаем сетку из 2 колонок */
 @media (min-width: 768px) {
     #charts-container {
         flex-direction: row;
@@ -46,24 +44,23 @@ body {
     }
     
     .chart-wrapper {
-        width: calc(50% - 10px); /* Два графика в ряд минус половина gap */
+        width: calc(50% - 10px); 
     }
 }
 .chart-wrapper {
     width: 100%;
     background: white;
     border-radius: 10px;
-    padding: 15px; /* Внутренний отступ от краев карточки до графика */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Красивая мягкая тень */
-    overflow: hidden; /* Обрезает всё, что посмеет вылезти за пределы карточки */
+    padding: 15px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden; 
 }
 
-/* Контейнер холста - КРИТИЧЕСКИ ВАЖНО ДЛЯ CHART.JS */
 .canvas-container {
-    position: relative; /* Без этого Chart.js сойдет с ума */
+    position: relative; 
     width: 100%;
-    height: 45vh; /* Высота графика будет занимать 45% высоты экрана телефона */
-    min-height: 300px; /* Но не меньше 300 пикселей, чтобы не сплющило */
+    height: 45vh; 
+    min-height: 300px; 
 }
 .chart-title { 
     margin-top: 0; 
