@@ -1,7 +1,6 @@
 package com.farm.monitor.controllers;
 
 import com.farm.monitor.repositories.NodeRepository;
-import java.lang.foreign.Linker.Option;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
