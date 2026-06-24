@@ -32,7 +32,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Measurement {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, unique = true)
     private Long id; 
 
